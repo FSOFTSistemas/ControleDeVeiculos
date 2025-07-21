@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Veiculo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class VeiculoController extends Controller
@@ -21,7 +22,7 @@ class VeiculoController extends Controller
     public function create()
     {
         try {
-            return view('veiculos.create');
+            return view('veiculos._form');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir o formulário: ' . $e->getMessage());
         }
@@ -56,6 +57,7 @@ class VeiculoController extends Controller
 
         try {
             $validated = $request->validate($rules, $messages);
+            $validated['empresa_id'] = Auth::user()->empresa_id;
 
             Veiculo::create($validated);
 
@@ -67,19 +69,11 @@ class VeiculoController extends Controller
         }
     }
 
-    public function show(Veiculo $veiculo)
-    {
-        try {
-            return view('veiculos.show', compact('veiculo'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exibir o veículo: ' . $e->getMessage());
-        }
-    }
 
     public function edit(Veiculo $veiculo)
     {
         try {
-            return view('veiculos.edit', compact('veiculo'));
+            return view('veiculos._form', compact('veiculo'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir o formulário de edição: ' . $e->getMessage());
         }

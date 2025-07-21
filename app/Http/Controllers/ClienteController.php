@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class ClienteController extends Controller
@@ -27,7 +28,7 @@ class ClienteController extends Controller
     public function create()
     {
         try {
-            return view('clientes.create');
+            return view('clientes._form');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir o formulário: ' . $e->getMessage());
         }
@@ -55,28 +56,19 @@ class ClienteController extends Controller
 
         try {
             $validated = $request->validate($rules, $messages);
-
+            $validated['empresa_id'] = Auth::user()->empresa_id;
             Cliente::create($validated);
 
             return redirect()->route('clientes.index')->with('success', 'Cliente criado com sucesso!');
         } catch (ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
+            return back()->with('error', $e->validator)->withInput();
         } catch (\Exception $e) {
+            dd($e->getMessage());
             return back()->with('error', 'Erro ao criar cliente: ' . $e->getMessage())->withInput();
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Cliente $cliente)
-    {
-        try {
-            return view('clientes.show', compact('cliente'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exibir o cliente: ' . $e->getMessage());
-        }
-    }
+    
 
     /**
      * Show the form for editing the specified resource.
@@ -84,7 +76,7 @@ class ClienteController extends Controller
     public function edit(Cliente $cliente)
     {
         try {
-            return view('clientes.edit', compact('cliente'));
+            return view('clientes._form', compact('cliente'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir o formulário de edição: ' . $e->getMessage());
         }
