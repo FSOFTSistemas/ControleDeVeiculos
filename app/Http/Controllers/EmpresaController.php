@@ -21,7 +21,7 @@ class EmpresaController extends Controller
     public function create()
     {
         try {
-            return view('empresas.create');
+            return view('empresas._form');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao carregar formulário: ' . $e->getMessage());
         }
@@ -55,19 +55,12 @@ class EmpresaController extends Controller
         }
     }
 
-    public function show(Empresa $empresa)
-    {
-        try {
-            return view('empresas.show', compact('empresa'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exibir empresa: ' . $e->getMessage());
-        }
-    }
+
 
     public function edit(Empresa $empresa)
     {
         try {
-            return view('empresas.edit', compact('empresa'));
+            return view('empresas._form', compact('empresa'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir formulário de edição: ' . $e->getMessage());
         }
