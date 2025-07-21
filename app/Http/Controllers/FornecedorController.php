@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fornecedor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class FornecedorController extends Controller
@@ -11,7 +12,7 @@ class FornecedorController extends Controller
     public function index()
     {
         try {
-            $fornecedores = Fornecedor::orderBy('nome')->paginate(15);
+            $fornecedores = Fornecedor::orderBy('nome')->get();
             return view('fornecedores.index', compact('fornecedores'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao listar fornecedores: ' . $e->getMessage());
@@ -21,7 +22,7 @@ class FornecedorController extends Controller
     public function create()
     {
         try {
-            return view('fornecedores.create');
+            return view('fornecedores._form');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir o formulário: ' . $e->getMessage());
         }
@@ -31,7 +32,7 @@ class FornecedorController extends Controller
     {
         $rules = [
             'nome' => 'required|string|max:255',
-            'cpf_cnpj' => 'nullable|string|max:20|unique:fornecedores,cpf_cnpj',
+            'cpf_cnpj' => 'nullable|string|max:20|unique:fornecedors,cpf_cnpj',
             'telefone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'endereco' => 'nullable|string|max:255',
@@ -45,6 +46,7 @@ class FornecedorController extends Controller
 
         try {
             $validated = $request->validate($rules, $messages);
+            $validated['empresa_id'] = Auth::user()->empresa_id;
             Fornecedor::create($validated);
 
             return redirect()->route('fornecedores.index')->with('success', 'Fornecedor cadastrado com sucesso!');
@@ -55,19 +57,12 @@ class FornecedorController extends Controller
         }
     }
 
-    public function show(Fornecedor $fornecedor)
-    {
-        try {
-            return view('fornecedores.show', compact('fornecedor'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exibir fornecedor: ' . $e->getMessage());
-        }
-    }
 
-    public function edit(Fornecedor $fornecedor)
+    public function edit($id)
     {
         try {
-            return view('fornecedores.edit', compact('fornecedor'));
+            $fornecedor = Fornecedor::findOrFail($id);
+            return view('fornecedores._form', compact('fornecedor'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao abrir formulário de edição: ' . $e->getMessage());
         }
@@ -77,7 +72,6 @@ class FornecedorController extends Controller
     {
         $rules = [
             'nome' => 'required|string|max:255',
-            'cpf_cnpj' => 'nullable|string|max:20|unique:fornecedores,cpf_cnpj,' . $fornecedor->id,
             'telefone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'endereco' => 'nullable|string|max:255',
@@ -95,7 +89,7 @@ class FornecedorController extends Controller
 
             return redirect()->route('fornecedores.index')->with('success', 'Fornecedor atualizado com sucesso!');
         } catch (ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao atualizar fornecedor: ' . $e->getMessage())->withInput();
         }
