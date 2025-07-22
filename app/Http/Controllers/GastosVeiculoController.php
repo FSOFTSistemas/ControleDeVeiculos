@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\GastosVeiculo;
+use App\Models\Veiculo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class GastosVeiculoController extends Controller
@@ -21,7 +23,8 @@ class GastosVeiculoController extends Controller
     public function create()
     {
         try {
-            return view('gastos_veiculos.create');
+            $veiculos = Veiculo::where('empresa_id', Auth::user()->empresa_id)->get();
+            return view('gastos_veiculos._form', compact('veiculos'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao carregar o formulário: ' . $e->getMessage());
         }
@@ -31,7 +34,7 @@ class GastosVeiculoController extends Controller
     {
         $rules = [
             'veiculo_id' => 'required|exists:veiculos,id',
-            'tipo' => 'required|string|max:100',
+            'tipo_gasto' => 'required|string|max:100',
             'descricao' => 'required|string|max:255',
             'valor' => 'required|numeric|min:0',
             'data' => 'required|date',
@@ -46,29 +49,24 @@ class GastosVeiculoController extends Controller
 
         try {
             $validated = $request->validate($rules, $messages);
+            $validated['empresa_id'] = Auth::user()->empresa_id;
             GastosVeiculo::create($validated);
 
             return redirect()->route('gastos-veiculos.index')->with('success', 'Gasto registrado com sucesso!');
         } catch (ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao registrar gasto: ' . $e->getMessage())->withInput();
         }
     }
 
-    public function show(GastosVeiculo $gastosVeiculo)
-    {
-        try {
-            return view('gastos_veiculos.show', compact('gastosVeiculo'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao exibir o gasto: ' . $e->getMessage());
-        }
-    }
 
-    public function edit(GastosVeiculo $gastosVeiculo)
+    public function edit($id)
     {
         try {
-            return view('gastos_veiculos.edit', compact('gastosVeiculo'));
+            $gasto = GastosVeiculo::find($id);
+            $veiculos = Veiculo::where('empresa_id', Auth::user()->empresa_id)->get();
+            return view('gastos_veiculos._form', compact('gasto', 'veiculos'));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao carregar o formulário de edição: ' . $e->getMessage());
         }
